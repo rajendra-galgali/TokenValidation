@@ -1,0 +1,158 @@
+swagger: "2.0"
+info:
+  description: "Self Service Mobile Application API"
+  version: "1.0"
+  title: "Pulse iD - Self Service Mobile Application API"
+  contact: {}
+# during dev, should point to your local machine
+#host: "test.pulseid.com"
+host: localhost:10010
+# basePath prefixes all resource paths 
+basePath: "/prospects"
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  /invite/validation:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: validate_token
+    post:
+      summary: "Validates an invite"
+      description: "Invites can expire or can be maliciously created. This endpoint helps with validating the real ones."
+      # used as the method name of the controller
+      operationId: validate_token
+      parameters:
+        - name: body
+          in: body
+          required: true
+          description: Invite key used by clients to login to the prospects app
+          schema:
+            type: object
+            required:
+              - "inviteToken"
+            properties:
+              inviteToken:
+                type: string
+                description: "An api invite token"
+                example: "d4f434"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/SDKInitData"
+        # responses may fall through to errors
+        "400":
+          description: "Invalid invite provided"
+          schema:
+            $ref: "#/definitions/ApiErrorResponse"
+        "403":
+          description: "Invalid JWT Token"
+          schema:
+            $ref: "#/definitions/ApiErrorResponse"
+        "500":
+          description: "Failed to generate invite"
+          schema:
+            $ref: "#/definitions/ApiErrorResponse"
+  /invite/generate:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: validate_token
+    post:
+      summary: "Generates a new invite"
+      description: "This endpoint will generate an invite and store it in the DB."
+      # used as the method name of the controller
+      operationId: generate_tokenfunction
+      parameters:
+        - name: body
+          in: body
+          required: true
+          description: Generate invite token for user.
+          schema:
+            $ref: '#/definitions/GenerateInviteRequest'
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/SDKInitData"
+        # responses may fall through to errors
+        "400":
+          description: "Invalid invite provided"
+          schema:
+            $ref: "#/definitions/ApiErrorResponse"
+        "403":
+          description: "Invalid JWT Token"
+          schema:
+            $ref: "#/definitions/ApiErrorResponse"
+        "500":
+          description: "Failed to generate invite"
+          schema:
+            $ref: "#/definitions/ApiErrorResponse"
+  /swagger:
+    x-swagger-pipe: swagger_raw
+# complex objects have schema definitions
+definitions:
+  SDKInitData:
+    required:
+      - "appKey"
+      - "appUrl"
+    properties:
+      appKey:
+        type: string
+        description: "App key used by the SDK"
+        example: "4d4f434841-373836313836303830-3430-616e64726f6964"
+      appUrl:
+        type: "string"
+        description: "Environment url used by the SDK"
+        example: "https://test.pulseid.com/2.1"
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+  ApiErrorResponse:
+      type: "object"
+      properties:
+        error_code:
+          type: "number"
+          description: "Error code useful for debugging"
+          example: "-101"
+        error_message:
+          type: "string"
+          description: "Error message"
+          example: "Failed to load data"
+        trace_id:
+          type: "string"
+          description: "Randomly generated ID for this request, used for support and debugging"
+          example: "b30d919c-6491-491e-a5e4-6222ef0b32e4"
+  GenerateInviteRequest:
+    type: "object"
+    required:
+    - "userId"
+    - "clientId"
+    - "appKey"
+    - "appUrl"
+    properties:
+      userId:
+        type: "string"
+        description: "The user id that requested the invite to be generated"
+        example: "aleks@pulseid.com"
+      clientId:
+        type: "integer"
+        description: "The client id for which this invite is generated"
+        example: 50
+      appKey:
+        type: "string"
+        description: "App key used by the SDK"
+        example: "4d4f434841-373836313836303830-3430-616e64726f6964"
+      appUrl:
+        type: "string"
+        description: "Environment url used by the SDK"
+        example: "https://test.pulseid.com/2.1"
