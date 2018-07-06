@@ -3,6 +3,7 @@
 var SwaggerExpress = require('swagger-express-mw');
 var app = require('express')();
 var cors = require('cors');
+var tokenService = require('./api/services/token-service');
 
 app.use(cors());
 
@@ -15,6 +16,9 @@ var config = {
 app.use(require('express').static('public'));
 require('./api/db/dbConnections')(app);
 require('./config/config')(app);
+
+let jwt_token = tokenService.generateToken({name: "mahesh"});
+console.log(jwt_token);
 
 SwaggerExpress.create(config, function(err, swaggerExpress) {
   if (err) { throw err; }
